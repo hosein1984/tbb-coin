@@ -1,52 +1,61 @@
 package org.tbb.db;
 
+import org.tbb.json.JsonUtils;
+import org.tbb.utils.FileUtils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
 
 public class State {
     private final Map<Account, Long> balances = new HashMap<>();
     private final List<Transaction> txMempool = new ArrayList<>();
+    private String latestBlockHash;
 
     private File dbFile;
 
     private State(File dbFile, Map<Account, Long> balances) {
         this.dbFile = dbFile;
         this.balances.putAll(balances);
+        this.latestBlockHash = BlockHeader.EMPTY_HASH;
     }
 
-    public static State initFromDisk() throws IOException, ParseException {
-        String cwd = System.getProperty("user.dir");
+    public static State initFromDisk(String rootDir) throws IOException, ParseException {
+        FileUtils.initDatabaseDir(rootDir);
 
-        Path databasePath = Paths.get(cwd, "database");
-
-        Path genesisFilePath = databasePath.resolve("genesis.json");
-        Genesis genesis = Genesis.initFromDisk(genesisFilePath);
-
-        Path dbFilePath = databasePath.resolve("tx.db");
+        Genesis genesis = Genesis.initFromDisk(FileUtils.getGenesisFilePath(rootDir));
+        Path dbFilePath = FileUtils.getBlocksFilePath(rootDir);
         File dbFile = dbFilePath.toFile();
-        if (!dbFile.exists()) {
-            throw new IOException("Database file does not exist");
-        }
-
         State state = new State(dbFile, genesis.getBalances());
 
         try (BufferedReader reader = Files.newBufferedReader(dbFilePath)) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Transaction tx = Transaction.parseJson(line);
-                state.applyTransaction(tx);
+                BlockFs blockFs = JsonUtils.fromJson(line, BlockFs.class);
+                state.applyBlock(blockFs.block());
+                state.latestBlockHash = blockFs.hash();
             }
         }
 
+
         return state;
+    }
+
+    public void addBlock(Block block) {
+        for (Transaction tx : block.body().transactions()) {
+            this.addTransaction(tx);
+        }
+    }
+
+    private void applyBlock(Block block) {
+        for (Transaction tx : block.body().transactions()) {
+            this.applyTransaction(tx);
+        }
     }
 
     public void addTransaction(Transaction tx) {
@@ -56,32 +65,40 @@ public class State {
 
     public void applyTransaction(Transaction tx) {
         if (tx.isReward()) {
-            long balance = this.balances.getOrDefault(tx.to(), 0L);
-            this.balances.put(tx.to(), balance + tx.amount());
+            this.balances.merge(tx.to(), tx.amount(), Long::sum);
         } else {
             long fromBalance = this.balances.getOrDefault(tx.from(), 0L);
             if (fromBalance < tx.amount()) {
                 throw new IllegalArgumentException("Insufficient balance");
             }
-
             this.balances.merge(tx.from(), -tx.amount(), Long::sum);
             this.balances.merge(tx.to(), tx.amount(), Long::sum);
         }
     }
 
-    public void persist() {
+    public String persist() {
+        Block block = new Block(this.latestBlockHash, this.txMempool);
+        String blockHash = block.hash();
+        BlockFs blockFs = new BlockFs(blockHash, block);
+
         try (FileWriter writer = new FileWriter(this.dbFile, true)) {
-            Iterator<Transaction> it = this.txMempool.iterator();
-            while (it.hasNext()) {
-                Transaction tx = it.next();
-                writer.write(tx.toJson());
-                writer.write("\n");
-                writer.flush();
-                it.remove();
-            }
+            String json = JsonUtils.toJson(blockFs);
+            writer.write(json);
+            writer.write("\n");
+            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        this.latestBlockHash = blockHash;
+        this.txMempool.clear();
+
+        return blockHash;
+    }
+
+
+    public String getLatestBlockHash() {
+        return this.latestBlockHash;
     }
 
     public long getAccountBalance(Account account) {

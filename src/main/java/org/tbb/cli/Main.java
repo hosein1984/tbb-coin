@@ -2,6 +2,9 @@ package org.tbb.cli;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
+
+import java.util.List;
 
 @Command(
         name = "tbb",
@@ -11,8 +14,11 @@ import picocli.CommandLine.Command;
                 BalancesCommand.class,
                 TransferCommand.class,
                 RewardCommand.class,
+                MigrateCommand.class
         })
 public class Main implements Runnable {
+    @Mixin
+    CommonOptions commonOptions;
 
     @Override
     public void run() {

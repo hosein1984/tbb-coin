@@ -1,40 +1,34 @@
 package org.tbb.db;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.tbb.json.JsonUtils;
 import org.tbb.utils.DateUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.*;
 
 public class Genesis {
-    private Date genesisTime;
-    private String chainId;
-    private final Map<Account, Long> balances = new HashMap<>();
+    private final String chainId;
+    private final Date genesisTime;
+    private final Map<Account, Long> balances = new LinkedHashMap<>();
 
-    public static Genesis initFromDisk(Path filePath) throws IOException, ParseException {
+    public static final Genesis DEFAULT = new Genesis(
+            "the-blockchain-bar-ledger",
+            DateUtils.mustParse("2019-03-18T00:00:00.000000000Z"),
+            Map.of(
+                    new Account("andrej"), 1000000L
+            ));
+
+    public Genesis(String chainId, Date genesisTime, Map<Account, Long> balances) {
+        this.chainId = chainId;
+        this.genesisTime = genesisTime;
+        this.balances.putAll(balances);
+    }
+
+    public static Genesis initFromDisk(Path filePath) throws IOException {
         String content = Files.readString(filePath);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode rootNode = objectMapper.readTree(content);
-
-        Genesis genesis = new Genesis();
-        genesis.genesisTime = DateUtils.parse(rootNode.get("genesis_time").asText());
-        genesis.chainId = rootNode.get("chain_id").asText();
-
-        JsonNode balancesNode = rootNode.get("balances");
-        Iterator<Map.Entry<String, JsonNode>> balancesFields = balancesNode.fields();
-        while (balancesFields.hasNext()) {
-            Map.Entry<String, JsonNode> entry = balancesFields.next();
-            String accountName = entry.getKey();
-            long balance = entry.getValue().asLong();
-            genesis.balances.put(new Account(accountName), balance);
-        }
-
-        return genesis;
+        return JsonUtils.fromJson(content, Genesis.class);
     }
 
     public Date getGenesisTime() {
