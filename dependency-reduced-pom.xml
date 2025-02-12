@@ -7,6 +7,14 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>org.tbb.cli.Main</mainClass>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
@@ -16,16 +24,27 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${project.build.directory}/database</outputDirectory>
+              <outputDirectory>${project.build.directory}/data</outputDirectory>
               <resources>
                 <resource>
-                  <directory>${project.basedir}/database</directory>
+                  <directory>${project.basedir}/data</directory>
                   <filtering>false</filtering>
                 </resource>
               </resources>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>org.tbb.cli.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
@@ -36,29 +55,12 @@
             <goals>
               <goal>shade</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.akathist.maven.plugins.launch4j</groupId>
-        <artifactId>launch4j-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>l4j-clui</id>
-            <phase>package</phase>
-            <goals>
-              <goal>launch4j</goal>
-            </goals>
             <configuration>
-              <headerType>console</headerType>
-              <jar>target/TbbCoin-1.0-SNAPSHOT.jar</jar>
-              <outfile>target/TbbCoin.exe</outfile>
-              <errTitle>TbbCoin Error</errTitle>
-              <chdir>.</chdir>
-              <stayAlive>false</stayAlive>
-              <classPath>
-                <mainClass>org.tbb.cli.Main</mainClass>
-              </classPath>
+              <transformers>
+                <transformer>
+                  <mainClass>org.tbb.cli.Main</mainClass>
+                </transformer>
+              </transformers>
             </configuration>
           </execution>
         </executions>

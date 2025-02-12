@@ -1,5 +1,7 @@
-package org.tbb.db;
+package org.tbb.core;
 
+import org.tbb.crypto.Hash;
+import org.tbb.crypto.HashUtils;
 import org.tbb.json.JsonUtils;
 import org.tbb.utils.FileUtils;
 
@@ -15,14 +17,15 @@ import java.util.*;
 public class State {
     private final Map<Account, Long> balances = new HashMap<>();
     private final List<Transaction> txMempool = new ArrayList<>();
-    private String latestBlockHash;
+
+    private Block latestBlock;
 
     private File dbFile;
 
     private State(File dbFile, Map<Account, Long> balances) {
         this.dbFile = dbFile;
         this.balances.putAll(balances);
-        this.latestBlockHash = BlockHeader.EMPTY_HASH;
+        this.latestBlock = Block.empty();
     }
 
     public static State initFromDisk(String rootDir) throws IOException, ParseException {
@@ -36,9 +39,12 @@ public class State {
         try (BufferedReader reader = Files.newBufferedReader(dbFilePath)) {
             String line;
             while ((line = reader.readLine()) != null) {
+                if (line.isBlank()) {
+                    continue;
+                }
                 BlockFs blockFs = JsonUtils.fromJson(line, BlockFs.class);
                 state.applyBlock(blockFs.block());
-                state.latestBlockHash = blockFs.hash();
+                state.latestBlock = blockFs.block();
             }
         }
 
@@ -76,9 +82,9 @@ public class State {
         }
     }
 
-    public String persist() {
-        Block block = new Block(this.latestBlockHash, this.txMempool);
-        String blockHash = block.hash();
+    public Hash persist() {
+        Block block = new Block(latestBlock.hash(), latestBlock.number() + 1, this.txMempool);
+        Hash blockHash = block.hash();
         BlockFs blockFs = new BlockFs(blockHash, block);
 
         try (FileWriter writer = new FileWriter(this.dbFile, true)) {
@@ -90,15 +96,19 @@ public class State {
             e.printStackTrace();
         }
 
-        this.latestBlockHash = blockHash;
+        this.latestBlock = block;
         this.txMempool.clear();
 
         return blockHash;
     }
 
 
-    public String getLatestBlockHash() {
-        return this.latestBlockHash;
+    public Hash getLatestBlockHash() {
+        return this.latestBlock.hash();
+    }
+
+    public Block getLatestBlock() {
+        return this.latestBlock;
     }
 
     public long getAccountBalance(Account account) {

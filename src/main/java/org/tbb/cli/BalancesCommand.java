@@ -1,7 +1,8 @@
 package org.tbb.cli;
 
-import org.tbb.db.Account;
-import org.tbb.db.State;
+import org.tbb.crypto.Hash;
+import org.tbb.core.Account;
+import org.tbb.core.State;
 import picocli.CommandLine.*;
 
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class BalancesCommand implements Runnable {
     public void run() {
         try {
             State state = State.initFromDisk(commonOptions.rootDir);
-            String blockHash = state.getLatestBlockHash();
+            Hash blockHash = state.getLatestBlockHash();
             if (accountName != null) {
                 Account account = new Account(accountName);
                 long balance = state.getAccountBalance(account);

@@ -4,8 +4,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 
-import java.util.List;
-
 @Command(
         name = "tbb",
         mixinStandardHelpOptions = true,
@@ -14,7 +12,8 @@ import java.util.List;
                 BalancesCommand.class,
                 TransferCommand.class,
                 RewardCommand.class,
-                MigrateCommand.class
+                MigrateCommand.class,
+                ServeCommand.class
         })
 public class Main implements Runnable {
     @Mixin

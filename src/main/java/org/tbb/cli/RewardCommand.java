@@ -1,10 +1,9 @@
 package org.tbb.cli;
 
-import org.tbb.db.Account;
-import org.tbb.db.State;
-import org.tbb.db.Transaction;
-import org.tbb.db.TransactionType;
-import picocli.CommandLine;
+import org.tbb.core.Account;
+import org.tbb.core.State;
+import org.tbb.core.Transaction;
+import org.tbb.core.TransactionType;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Option;

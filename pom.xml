@@ -25,6 +25,16 @@
             <artifactId>picocli</artifactId>
             <version>4.7.6</version>
         </dependency>
+        <dependency>
+            <groupId>io.javalin</groupId>
+            <artifactId>javalin</artifactId>
+            <version>6.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.16</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -50,10 +60,10 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/database</outputDirectory>
+                            <outputDirectory>${project.build.directory}/data</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}/database</directory>
+                                    <directory>${project.basedir}/data</directory>
                                     <filtering>false</filtering>
                                 </resource>
                             </resources>
@@ -62,7 +72,21 @@
                 </executions>
             </plugin>
 
-            <!-- Creates a single JAR with dependencies -->
+            <!-- Add the main class to the MANIFEST -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.tbb.cli.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!-- Creates a single shaded JAR with dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -73,31 +97,12 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Converts the JAR to an EXE -->
-            <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>l4j-clui</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>launch4j</goal>
-                        </goals>
                         <configuration>
-                            <headerType>console</headerType>
-                            <jar>target/TbbCoin-1.0-SNAPSHOT.jar</jar>
-                            <outfile>target/TbbCoin.exe</outfile>
-                            <errTitle>TbbCoin Error</errTitle>
-                            <chdir>.</chdir>
-                            <stayAlive>false</stayAlive>
-                            <classPath>
-                                <mainClass>org.tbb.cli.Main</mainClass>
-                            </classPath>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.tbb.cli.Main</mainClass>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>

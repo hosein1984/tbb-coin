@@ -1,0 +1,31 @@
+### Base Url
+@base_url = http://localhost:8080
+
+### List balances
+GET {{base_url}}/balances/list
+
+### Get user balance
+@account_name = andrej
+GET {{base_url}}/balances/{{account_name}}
+
+### Transfer money
+@from = andrej
+@to = babayaga
+@amount = 100
+POST {{base_url}}/transactions/add
+
+{
+  "from": "andrej",
+  "to": "babayaga",
+  "amount": 100,
+}
+
+### Reward money
+POST {{base_url}}/transactions/add
+
+{
+  "from": "andrej",
+  "to": "andrej",
+  "amount": 24700,
+  "type": "reward"
+}

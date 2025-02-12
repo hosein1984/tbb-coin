@@ -1,4 +1,4 @@
-package org.tbb.db;
+package org.tbb.core;
 
 import org.tbb.json.JsonUtils;
 import org.tbb.utils.DateUtils;
@@ -6,11 +6,12 @@ import org.tbb.utils.DateUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.*;
 
 public class Genesis {
     private final String chainId;
-    private final Date genesisTime;
+    private final Instant genesisTime;
     private final Map<Account, Long> balances = new LinkedHashMap<>();
 
     public static final Genesis DEFAULT = new Genesis(
@@ -20,7 +21,7 @@ public class Genesis {
                     new Account("andrej"), 1000000L
             ));
 
-    public Genesis(String chainId, Date genesisTime, Map<Account, Long> balances) {
+    public Genesis(String chainId, Instant genesisTime, Map<Account, Long> balances) {
         this.chainId = chainId;
         this.genesisTime = genesisTime;
         this.balances.putAll(balances);
@@ -31,7 +32,7 @@ public class Genesis {
         return JsonUtils.fromJson(content, Genesis.class);
     }
 
-    public Date getGenesisTime() {
+    public Instant getGenesisTime() {
         return genesisTime;
     }
 

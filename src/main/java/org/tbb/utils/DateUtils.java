@@ -5,18 +5,23 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 
 public class DateUtils {
-    public static Date parse(String date) throws ParseException {
-        return Date.from(Instant.parse(date));
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
+
+    public static Instant parse(String date) throws DateTimeParseException {
+        return Instant.parse(date);
     }
 
-    public static Date mustParse(String date) {
+    public static Instant mustParse(String date) {
         try {
-            // "2019-03-18T00:00:00.000000000Z" fails?
             return parse(date);
-        } catch (ParseException e) {
+        } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("Invalid date format", e);
         }
     }
@@ -25,12 +30,11 @@ public class DateUtils {
         return Instant.now().getEpochSecond();
     }
 
-    public static Date fromUnix(long unix) {
-        return Date.from(Instant.ofEpochSecond(unix));
+    public static Instant fromUnix(long unix) {
+        return Instant.ofEpochSecond(unix);
     }
 
-    public static Object format(Date genesisTime) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'");
-        return dateFormat.format(genesisTime);
+    public static String format(Instant instant) {
+        return FORMATTER.format(instant);
     }
 }

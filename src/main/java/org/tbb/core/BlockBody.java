@@ -1,4 +1,4 @@
-package org.tbb.db;
+package org.tbb.core;
 
 import java.util.List;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package org.tbb.db;
+package org.tbb.core;
 
 
 public record Transaction(Account from, Account to, long amount, TransactionType type) {
